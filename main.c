@@ -67,7 +67,26 @@ int main(void) {
                 }
                 break;
             case 4:
-                printf("Завантажити з файлу");
+                char filename_2[100];
+                printf("Введіть ім'я файлу для збереження: ");
+                scanf("%s", filename_2);
+
+                FILE* file_2 = fopen(filename_2, "r");
+
+                if (file != NULL) {
+                    current_lines = 0;
+                    char temp_buffer[128];
+                    while (fgets(temp_buffer, 128, file) != NULL) {
+                        a[current_lines] = malloc(128*sizeof(char));
+                        strcpy(a[current_lines], temp_buffer);
+                        current_lines ++;
+                    }
+                    fclose(file_2);
+                    printf("Текст успішно завантажено\n");
+                }
+                else {
+                    printf("Помилка під час відкриття файлу\n");
+                }
                 break;
             case 5:
                 for (int i=0; i < current_lines; i++) {
@@ -78,7 +97,17 @@ int main(void) {
                 printf("Вставити текст за індексом рядка та символу");
                 break;
             case 7:
-                printf("Пошук тексту");
+                char search_term[128];
+                printf("Введіть текст для пошуку: ");
+                scanf(" %[^\n]", search_term);
+                for (int i=0; i < current_lines; i++) {
+                    char * myPtr = a[i];
+                    while ((myPtr = strstr(myPtr, search_term)) != NULL) {
+                        int index = myPtr - a[i];
+                        printf("У цьому місці міститься текст: %d %d\n", i, index);
+                        myPtr += strlen(search_term);
+                    }
+                }
                 break;
             case 0:
                 printf("Вихід з програми");
@@ -91,4 +120,3 @@ int main(void) {
     }
     return 0;
 }
-
