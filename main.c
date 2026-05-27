@@ -40,10 +40,16 @@ int main(void) {
                 strcat(a[current_lines-1], buffer);
                 break;
             case 2:
-                current_lines ++;
-                a[current_lines-1] = malloc(max_length * sizeof(char));
-                a[current_lines-1][0] = '\0';
-                printf("Ви почали новий рядок");
+                if (current_lines >= max_lines) {
+                    printf("Помилка: Досягнуто ліміт рядків. Неможливо додати новий.");
+                }
+                else {
+                    current_lines ++;
+                    a[current_lines-1] = malloc(max_length * sizeof(char));
+                    a[current_lines-1][0] = '\0';
+                    printf("Ви почали новий рядок");
+                }
+
                 break;
             case 3: {
                 char filename[100];
