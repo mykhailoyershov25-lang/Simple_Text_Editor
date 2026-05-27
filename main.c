@@ -45,7 +45,7 @@ int main(void) {
                 a[current_lines-1][0] = '\0';
                 printf("Ви почали новий рядок");
                 break;
-            case 3:
+            case 3: {
                 char filename[100];
                 printf("Enter the file name for saving: ");
                 scanf("%s", filename);
@@ -66,6 +66,7 @@ int main(void) {
                     printf("Помилка під час відкриття файлу\n");
                 }
                 break;
+            }
             case 4:
                 char filename_2[100];
                 printf("Введіть ім'я файлу для збереження: ");
@@ -73,10 +74,11 @@ int main(void) {
 
                 FILE* file_2 = fopen(filename_2, "r");
 
-                if (file != NULL) {
+                if (file_2 != NULL) {
                     current_lines = 0;
                     char temp_buffer[128];
-                    while (fgets(temp_buffer, 128, file) != NULL) {
+                    while (fgets(temp_buffer, 128, file_2) != NULL) {
+                        temp_buffer[strcspn(temp_buffer, "\n")] = '\0';
                         a[current_lines] = malloc(128*sizeof(char));
                         strcpy(a[current_lines], temp_buffer);
                         current_lines ++;
@@ -94,7 +96,33 @@ int main(void) {
                 }
                 break;
             case 6:
-                printf("Вставити текст за індексом рядка та символу");
+                int insert_line, insert_index;
+                char insert_text[128];
+                printf("Виберіть рядок та індекс: ");
+                scanf("%d %d", &insert_line, &insert_index);
+                printf("Введіть текст, який потрібно вставити: ");
+                scanf(" %[^\n]", insert_text);
+
+                if (insert_line < 0 || insert_line >= current_lines || insert_index < 0 || insert_index > strlen(a[insert_line])) {
+                    printf("Помилка: Індекс вставки поза межами діапазону\n");
+                }
+                else {
+                    int old_len = strlen(a[insert_line]);
+                    int insert_len = strlen(insert_text);
+                    int new_len = old_len + insert_len;
+                    a[insert_line] = realloc(a[insert_line], (new_len + 1) * sizeof(char));
+                    if (a[insert_line] != NULL) {
+                        memmove(a[insert_line] + insert_index + insert_len,
+                            a[insert_line] + insert_index,
+                            old_len - insert_index + 1);
+
+                        memcpy(a[insert_line] + insert_index, insert_text, insert_len);
+                        printf("Текст успішно вставлено!\n");
+                    }
+                    else {
+                        printf("Помилка виділення пам'яті\n");
+                    }
+                }
                 break;
             case 7:
                 char search_term[128];
