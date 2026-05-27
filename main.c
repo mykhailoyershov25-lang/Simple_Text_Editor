@@ -47,8 +47,24 @@ int main(void) {
                 break;
             case 3:
                 char filename[100];
-                
-                printf("Зберегти у файл");
+                printf("Enter the file name for saving: ");
+                scanf("%s", filename);
+
+                FILE* file = fopen(filename, "w");
+
+                if (file != NULL) {
+
+                    for (int i=0; i < current_lines; i++) {
+                        fputs(a[i], file);
+                        fputs("\n", file);
+
+                    }
+                    fclose(file);
+
+                    printf("Текст успішно збережено\n");
+                } else {
+                    printf("Помилка під час відкриття файлу\n");
+                }
                 break;
             case 4:
                 printf("Завантажити з файлу");
