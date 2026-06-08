@@ -11,6 +11,7 @@ void print_help() {
     printf("5. Надрукувати поточний текст на консоль\n");
     printf("6. Вставити текст за індексом рядка та символу\n");
     printf("7. Пошук тексту\n");
+    printf("8. Видалення тексту \n");
     printf("0. Вихід з програми\n");
     printf("=========================================\n");
     printf("Виберіть команду: ");
@@ -37,21 +38,24 @@ int main(void) {
                 char buffer[128];
                 printf("Введіть текст для додавання: ");
                 scanf(" %[^\n]", buffer);
+                int new_len = strlen(a[current_lines-1]) + strlen(buffer) + 1;
+                a[current_lines-1] = realloc(a[current_lines-1], new_len * sizeof(char));
                 strcat(a[current_lines-1], buffer);
                 break;
             case 2:
                 if (current_lines >= max_lines) {
-                    printf("Помилка: Досягнуто ліміт рядків. Неможливо додати новий.");
+                    max_lines *= 2;
+                    a = realloc(a, max_lines * sizeof(char*));
                 }
                 else {
                     current_lines ++;
-                    a[current_lines-1] = malloc(max_length * sizeof(char));
+                    a[current_lines-1] = malloc(1 * sizeof(char));
                     a[current_lines-1][0] = '\0';
                     printf("Ви почали новий рядок");
                 }
 
                 break;
-            case 3: {
+            case 3:
                 char filename[100];
                 printf("Enter the file name for saving: ");
                 scanf("%s", filename);
@@ -72,7 +76,6 @@ int main(void) {
                     printf("Помилка під час відкриття файлу\n");
                 }
                 break;
-            }
             case 4:
                 char filename_2[100];
                 printf("Введіть ім'я файлу для збереження: ");
@@ -85,9 +88,14 @@ int main(void) {
                     char temp_buffer[128];
                     while (fgets(temp_buffer, 128, file_2) != NULL) {
                         temp_buffer[strcspn(temp_buffer, "\n")] = '\0';
-                        a[current_lines] = malloc(128*sizeof(char));
+                        if (current_lines >= max_lines) {
+                            max_lines *= 2;
+                            a = realloc(a, max_lines * sizeof(char*));
+                        }
+                        int len = strlen(temp_buffer) + 1;
+                        a[current_lines] = malloc(len * sizeof(char));
                         strcpy(a[current_lines], temp_buffer);
-                        current_lines ++;
+                        current_lines++;
                     }
                     fclose(file_2);
                     printf("Текст успішно завантажено\n");
@@ -141,6 +149,22 @@ int main(void) {
                         printf("У цьому місці міститься текст: %d %d\n", i, index);
                         myPtr += strlen(search_term);
                     }
+                }
+                break;
+            case 8:
+                int del_line, del_index, del_count;
+                printf("Виберіть рядок, індекс та кількість символів:");
+                scanf("%d %d %d", &del_line, &del_index, &del_count);
+
+                if (del_line < 0 || del_line >= current_lines || del_index < 0 || del_count < 0 || del_index + del_count > strlen(a[del_line])) {
+                    printf("Помилка: Неправильні параметри для видалення\n");
+                }
+                else {
+                    int old_len = strlen(a[del_line]);
+                    memmove(a[del_line] + del_index,
+                            a[del_line] + del_index + del_count,
+                            old_len - del_index - del_count + 1);
+                    printf("Текст успішно видалено!\n");
                 }
                 break;
             case 0:
