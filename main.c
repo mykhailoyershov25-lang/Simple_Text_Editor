@@ -13,6 +13,7 @@ void print_help() {
     printf("7. Пошук тексту\n");
     printf("8. Видалення тексту \n");
     printf("0. Вихід з програми\n");
+    printf("12. Paste\n");
     printf("13. Copy\n");
     printf("14. Вставка із заміною\n");
     printf("=========================================\n");
@@ -168,6 +169,28 @@ int main(void) {
                             a[del_line] + del_index + del_count,
                             old_len - del_index - del_count + 1);
                     printf("Текст успішно видалено!\n");
+                }
+                break;
+            case 12:
+                if (clipboard == NULL) {
+                    printf("Помилка: Буфер обміну порожній!\n");
+                    break;
+                }
+                int pst_line, pst_index;
+                printf("Виберіть рядок та індекс: ");
+                scanf("%d %d", &pst_line, &pst_index);
+
+                if (pst_line < 0 || pst_line >= current_lines || pst_index < 0 || pst_index > strlen(a[pst_line])) {
+                    printf("Помилка: Неправильні параметри для вставки\n");
+                }
+                else {
+                    int old_len = strlen(a[pst_line]);
+                    int clip_len = strlen(clipboard);
+
+                    a[pst_line] = realloc(a[pst_line], (old_len + clip_len + 1) * sizeof(char));
+                    memmove(a[pst_line] + pst_index + clip_len, a[pst_line] + pst_index, old_len - pst_index + 1);
+                    memcpy(a[pst_line] + pst_index, clipboard, clip_len);
+                    printf("Текст вставлено з буфера!\n");
                 }
                 break;
             case 13:
