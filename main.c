@@ -13,6 +13,8 @@ void print_help() {
     printf("7. Пошук тексту\n");
     printf("8. Видалення тексту \n");
     printf("0. Вихід з програми\n");
+    printf("13. Copy\n");
+    printf("14. Вставка із заміною\n");
     printf("=========================================\n");
     printf("Виберіть команду: ");
 }
@@ -24,6 +26,7 @@ int main(void) {
     int max_lines = 10;
     int current_lines = 1;
     int max_length = 128;
+    char* clipboard = NULL;
 
     char** a = malloc(max_lines*sizeof(char*));
     a[0] = malloc(max_length * sizeof(char));
@@ -165,6 +168,44 @@ int main(void) {
                             a[del_line] + del_index + del_count,
                             old_len - del_index - del_count + 1);
                     printf("Текст успішно видалено!\n");
+                }
+                break;
+            case 13:
+                int cp_line, cp_index, cp_count;
+                printf("Виберіть рядок, індекс та кількість символів: ");
+                scanf("%d %d %d", &cp_line, &cp_index, &cp_count);
+                if (cp_line < 0 || cp_line >= current_lines || cp_index < 0 || cp_count < 0 || cp_index + cp_count > strlen(a[cp_line])) {
+                    printf("Помилка: Неправильні параметри для копіювання\n");
+                }
+                else {
+                    clipboard = realloc(clipboard, (cp_count+1) * sizeof(char));
+                    memcpy(clipboard, a[cp_line] + cp_index, cp_count);
+                    clipboard[cp_count] = '\0';
+
+                    printf("Текст успішно скопійовано");
+                }
+                break;
+            case 14:
+                int rep_line, rep_index;
+                char rep_text[128];
+                printf("Виберіть рядок та індекс: ");
+                scanf("%d %d", &rep_line, &rep_index);
+                printf("Написати текст: ");
+                scanf(" %127[^\n]", rep_text);
+
+                if (rep_line < 0 || rep_line >= current_lines || rep_index < 0 || rep_index > strlen(a[rep_line])) {
+                    printf("Неправильний індекс заміни\n");
+                }
+                else {
+                    int old_len = strlen(a[rep_line]);
+                    int rep_len = strlen(rep_text);
+                    if (rep_index + rep_len > old_len) {
+                        a[rep_line] = realloc(a[rep_line], (rep_index + rep_len + 1)* sizeof(char));
+                        a[rep_line][rep_index + rep_len] = '\0';
+
+                    }
+                    memcpy(a[rep_line] + rep_index, rep_text, rep_len);
+                    printf("Текст успішно замінено!\n");
                 }
                 break;
             case 0:
