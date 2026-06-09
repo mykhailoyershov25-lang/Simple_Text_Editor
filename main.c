@@ -12,10 +12,11 @@ void print_help() {
     printf("6. Вставити текст за індексом рядка та символу\n");
     printf("7. Пошук тексту\n");
     printf("8. Видалення тексту \n");
-    printf("0. Вихід з програми\n");
+    printf("11. Cut\n");
     printf("12. Paste\n");
     printf("13. Copy\n");
     printf("14. Вставка із заміною\n");
+    printf("0. Вихід з програми\n");
     printf("=========================================\n");
     printf("Виберіть команду: ");
 }
@@ -170,6 +171,27 @@ int main(void) {
                             old_len - del_index - del_count + 1);
                     printf("Текст успішно видалено!\n");
                 }
+                break;
+            case 11:
+                int cut_line, cut_index, cut_count;
+                printf("Виберіть рядок, індекс та кількість символів: ");
+                scanf("%d %d %d", &cut_line, &cut_index, &cut_count);
+
+                if (cut_line < 0 || cut_line >= current_lines || cut_index < 0 || cut_count < 0 || cut_index + cut_count > strlen(a[cut_line])) {
+                    printf("Помилка: Неправильні параметри для вирізання\n");
+                }
+                else {
+                    clipboard = realloc(clipboard, (cut_count+1) * sizeof(char));
+                    memcpy(clipboard, a[cut_line] + cut_index, cut_count);
+                    clipboard[cut_count] = '\0';
+
+                    int old_len = strlen(a[cut_line]);
+                    memmove(a[cut_line] + cut_index,
+                            a[cut_line] + cut_index + cut_count,
+                            old_len - cut_index - cut_count + 1);
+                    printf("Текст Вирізано в буфер!\n");
+                }
+
                 break;
             case 12:
                 if (clipboard == NULL) {
