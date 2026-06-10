@@ -21,6 +21,42 @@ void print_help() {
     printf("Виберіть команду: ");
 }
 
+void save_state(char** a, int current_lines,
+                char*** undo_text_buffer, int* undo_lines_buffer, int* undo_count_ptr,
+                char*** redo_text_buffer, int* redo_lines_buffer, int* redo_count_ptr) {
+
+    for (int i = 0; i < *redo_count_ptr; i++) {
+        for (int j = 0; j < redo_lines_buffer[i]; j++) {
+            free(redo_text_buffer[i][j]);
+        }
+        free(redo_text_buffer[i]);
+    }
+    *redo_count_ptr = 0;
+
+    if (*undo_count_ptr == 3) {
+        for (int i = 0; i < undo_lines_buffer[0]; i++) {
+            free(undo_text_buffer[0][i]);
+        }
+        free(undo_text_buffer[0]);
+
+        for (int i = 1; i < 3; i++) {
+            undo_text_buffer[i - 1] = undo_text_buffer[i];
+            undo_lines_buffer[i - 1] = undo_lines_buffer[i];
+        }
+        (*undo_count_ptr)--;
+    }
+
+    char** saved_text = malloc(current_lines * sizeof(char*));
+    for (int i = 0; i < current_lines; i++) {
+        saved_text[i] = malloc((strlen(a[i]) + 1) * sizeof(char));
+        strcpy(saved_text[i], a[i]);
+    }
+
+    undo_text_buffer[*undo_count_ptr] = saved_text;
+    undo_lines_buffer[*undo_count_ptr] = current_lines;
+    (*undo_count_ptr)++;
+}
+
 int main(void) {
 
     int command;
@@ -29,6 +65,14 @@ int main(void) {
     int current_lines = 1;
     int max_length = 128;
     char* clipboard = NULL;
+
+    char** undo_text_buffer[3];
+    int undo_lines_buffer[3];
+    int undo_count = 0;
+
+    char** redo_text_buffer[3];
+    int redo_lines_buffer[3];
+    int redo_count = 0;
 
     char** a = malloc(max_lines*sizeof(char*));
     a[0] = malloc(max_length * sizeof(char));
@@ -40,6 +84,7 @@ int main(void) {
 
         switch(command) {
             case 1:
+                save_state(a, current_lines, undo_text_buffer, undo_lines_buffer, &undo_count, redo_text_buffer, redo_lines_buffer, &redo_count);
                 char buffer[128];
                 printf("Введіть текст для додавання: ");
                 scanf(" %[^\n]", buffer);
@@ -48,6 +93,7 @@ int main(void) {
                 strcat(a[current_lines-1], buffer);
                 break;
             case 2:
+                save_state(a, current_lines, undo_text_buffer, undo_lines_buffer, &undo_count, redo_text_buffer, redo_lines_buffer, &redo_count);
                 if (current_lines >= max_lines) {
                     max_lines *= 2;
                     a = realloc(a, max_lines * sizeof(char*));
@@ -58,7 +104,6 @@ int main(void) {
                     a[current_lines-1][0] = '\0';
                     printf("Ви почали новий рядок");
                 }
-
                 break;
             case 3:
                 char filename[100];
@@ -115,6 +160,7 @@ int main(void) {
                 }
                 break;
             case 6:
+                save_state(a, current_lines, undo_text_buffer, undo_lines_buffer, &undo_count, redo_text_buffer, redo_lines_buffer, &redo_count);
                 int insert_line, insert_index;
                 char insert_text[128];
                 printf("Виберіть рядок та індекс: ");
@@ -157,6 +203,7 @@ int main(void) {
                 }
                 break;
             case 8:
+                save_state(a, current_lines, undo_text_buffer, undo_lines_buffer, &undo_count, redo_text_buffer, redo_lines_buffer, &redo_count);
                 int del_line, del_index, del_count;
                 printf("Виберіть рядок, індекс та кількість символів:");
                 scanf("%d %d %d", &del_line, &del_index, &del_count);
@@ -172,7 +219,68 @@ int main(void) {
                     printf("Текст успішно видалено!\n");
                 }
                 break;
+            case 9:
+                if (undo_count > 0) {
+                    char** state_for_redo = malloc(current_lines * sizeof(char*));
+                    for (int i = 0; i < current_lines; i++) {
+                        state_for_redo[i] = malloc((strlen(a[i]) + 1) * sizeof(char));
+                        strcpy(state_for_redo[i], a[i]);
+                    }
+                    redo_text_buffer[redo_count] = state_for_redo;
+                    redo_lines_buffer[redo_count] = current_lines;
+                    redo_count++;
+
+                    undo_count--;
+                    char** restored_text = undo_text_buffer[undo_count];
+                    int restored_lines = undo_lines_buffer[undo_count];
+
+                    for (int i = 0; i < current_lines; i++) {
+                        free(a[i]);
+                    }
+                    free(a);
+
+                    a = restored_text;
+                    current_lines = restored_lines;
+                    max_lines = current_lines > 10 ? current_lines : 10;
+
+                    printf("Undo виконано успішно!\n");
+                }
+                else {
+                    printf("Немає дій для відміни (Undo).\n");
+                }
+                break;
+            case 10:
+                if (redo_count > 0) {
+                    char** state_for_undo = malloc(current_lines * sizeof(char*));
+                    for (int i = 0; i < current_lines; i++) {
+                        state_for_undo[i] = malloc((strlen(a[i]) + 1) * sizeof(char));
+                        strcpy(state_for_undo[i], a[i]);
+                    }
+                    undo_text_buffer[undo_count] = state_for_undo;
+                    undo_lines_buffer[undo_count] = current_lines;
+                    undo_count++;
+
+                    redo_count--;
+                    char** restored_text = redo_text_buffer[redo_count];
+                    int restored_lines = redo_lines_buffer[redo_count];
+
+                    for (int i = 0; i < current_lines; i++) {
+                        free(a[i]);
+                    }
+                    free(a);
+
+                    a = restored_text;
+                    current_lines = restored_lines;
+                    max_lines = current_lines > 10 ? current_lines : 10;
+
+                    printf("Redo виконано успішно!\n");
+                }
+                else {
+                    printf("Немає дій для повтору (Redo).\n");
+                }
+                break;
             case 11:
+                save_state(a, current_lines, undo_text_buffer, undo_lines_buffer, &undo_count, redo_text_buffer, redo_lines_buffer, &redo_count);
                 int cut_line, cut_index, cut_count;
                 printf("Виберіть рядок, індекс та кількість символів: ");
                 scanf("%d %d %d", &cut_line, &cut_index, &cut_count);
@@ -191,9 +299,9 @@ int main(void) {
                             old_len - cut_index - cut_count + 1);
                     printf("Текст Вирізано в буфер!\n");
                 }
-
                 break;
             case 12:
+                save_state(a, current_lines, undo_text_buffer, undo_lines_buffer, &undo_count, redo_text_buffer, redo_lines_buffer, &redo_count);
                 if (clipboard == NULL) {
                     printf("Помилка: Буфер обміну порожній!\n");
                     break;
@@ -231,6 +339,7 @@ int main(void) {
                 }
                 break;
             case 14:
+                save_state(a, current_lines, undo_text_buffer, undo_lines_buffer, &undo_count, redo_text_buffer, redo_lines_buffer, &redo_count);
                 int rep_line, rep_index;
                 char rep_text[128];
                 printf("Виберіть рядок та індекс: ");
